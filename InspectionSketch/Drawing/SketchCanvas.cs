@@ -23,8 +23,8 @@ namespace InspectionSketch.Drawing
             
             base.OnRender(drawingContext);
 
-            
 
+            drawingRenderer.Zoom = camera.Zoom;
             drawingRenderer.Draw(drawingContext, RenderSize);
 
         }
