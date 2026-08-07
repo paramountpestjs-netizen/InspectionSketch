@@ -1,17 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using InspectionSketch.Drawing;
+using InspectionSketch.Models;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.Windows.Controls;
-using InspectionSketch.Models;
+using InspectionSketch.Drawing;
 namespace InspectionSketch
 {
     public partial class MainWindow : Window
     {
         private Point? lastPoint = null;
         private Sketch currentSketch = new Sketch();
-        
+        private readonly SnapEngine snapEngine = new SnapEngine();
         public MainWindow()
         {
             InitializeComponent();
@@ -20,7 +22,7 @@ namespace InspectionSketch
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            DrawGrid();
+            // The SketchCanvas now draws its own grid.
         }
 
 
@@ -61,12 +63,8 @@ namespace InspectionSketch
         }
         private Point SnapToGrid(Point point)
         {
-            double spacing = currentSketch.Settings.GridSpacing;
-
-            double snappedX = System.Math.Round(point.X / spacing) * spacing;
-            double snappedY = System.Math.Round(point.Y / spacing) * spacing;
-
-            return new Point(snappedX, snappedY);
+            snapEngine.GridSpacing = currentSketch.Settings.GridSpacing;
+            return snapEngine.SnapToGrid(point);
         }
 
         private void DrawingCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
