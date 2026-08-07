@@ -8,19 +8,22 @@ namespace InspectionSketch.Drawing
         private readonly Camera camera = new Camera();
         private readonly DrawingRenderer drawingRenderer = new();
 
-        public double GridSpacing { get; set; } = 25;
+        
 
         public SketchCanvas()
         {
             ClipToBounds = true;
             Focusable = true;
-
+            drawingRenderer.GridSpacing = DrawingRenderer.DefaultGridSpacing;
             MouseWheel += SketchCanvas_MouseWheel;
         }
-
+        
         protected override void OnRender(DrawingContext drawingContext)
         {
+            
             base.OnRender(drawingContext);
+
+            
 
             drawingRenderer.Draw(drawingContext, RenderSize);
 
