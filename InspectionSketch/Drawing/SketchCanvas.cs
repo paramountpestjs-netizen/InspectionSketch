@@ -10,13 +10,17 @@ namespace InspectionSketch.Drawing
 
         private bool isPanning = false;
         private Point lastPanPoint;
-
+        private Point? wallStartPoint = null;
+        private Point? wallPreviewPoint = null;
 
         public SketchCanvas()
         {
             ClipToBounds = true;
             Focusable = true;
+            Cursor = System.Windows.Input.Cursors.Cross;
+
             drawingRenderer.GridSpacing = DrawingRenderer.DefaultGridSpacing;
+           
             MouseWheel += SketchCanvas_MouseWheel;
 
             MouseDown += SketchCanvas_MouseDown;
@@ -34,7 +38,15 @@ namespace InspectionSketch.Drawing
             drawingRenderer.Zoom = camera.Zoom;
             drawingRenderer.Offset = camera.Offset;
             drawingRenderer.Draw(drawingContext, RenderSize);
+            if (wallStartPoint != null && wallPreviewPoint != null)
+            {
+                Pen previewPen = new Pen(Brushes.Yellow, 2);
 
+                drawingContext.DrawLine(
+                    previewPen,
+                    wallStartPoint.Value,
+                    wallPreviewPoint.Value);
+            }
 
         }
 
@@ -70,6 +82,11 @@ namespace InspectionSketch.Drawing
                 lastPanPoint = e.GetPosition(this);
                 CaptureMouse();
             }
+
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            {
+                wallStartPoint = e.GetPosition(this);
+            }
         }
 
         private void SketchCanvas_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
@@ -84,6 +101,11 @@ namespace InspectionSketch.Drawing
 
                 lastPanPoint = currentPoint;
 
+                InvalidateVisual();
+            }
+            if (wallStartPoint != null && !isPanning)
+            {
+                wallPreviewPoint = e.GetPosition(this);
                 InvalidateVisual();
             }
         }
