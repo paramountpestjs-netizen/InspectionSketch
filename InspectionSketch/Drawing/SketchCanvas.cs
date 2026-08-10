@@ -8,7 +8,9 @@ namespace InspectionSketch.Drawing
         private readonly Camera camera = new Camera();
         private readonly DrawingRenderer drawingRenderer = new();
 
-        
+        private bool isPanning = false;
+        private Point lastPanPoint;
+
 
         public SketchCanvas()
         {
@@ -16,6 +18,10 @@ namespace InspectionSketch.Drawing
             Focusable = true;
             drawingRenderer.GridSpacing = DrawingRenderer.DefaultGridSpacing;
             MouseWheel += SketchCanvas_MouseWheel;
+
+            MouseDown += SketchCanvas_MouseDown;
+            MouseMove += SketchCanvas_MouseMove;
+            MouseUp += SketchCanvas_MouseUp;
         }
         
         protected override void OnRender(DrawingContext drawingContext)
@@ -25,7 +31,9 @@ namespace InspectionSketch.Drawing
 
 
             drawingRenderer.Zoom = camera.Zoom;
+            drawingRenderer.Offset = camera.Offset;
             drawingRenderer.Draw(drawingContext, RenderSize);
+            
 
         }
 
@@ -48,6 +56,40 @@ namespace InspectionSketch.Drawing
             }
 
             InvalidateVisual();
+        }
+        private void SketchCanvas_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Middle)
+            {
+                isPanning = true;
+                lastPanPoint = e.GetPosition(this);
+                CaptureMouse();
+            }
+        }
+
+        private void SketchCanvas_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (isPanning)
+            {
+                Point currentPoint = e.GetPosition(this);
+
+                Vector delta = currentPoint - lastPanPoint;
+
+                camera.Pan(delta);
+
+                lastPanPoint = currentPoint;
+
+                InvalidateVisual();
+            }
+        }
+
+        private void SketchCanvas_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Middle)
+            {
+                isPanning = false;
+                ReleaseMouseCapture();
+            }
         }
     }
 }

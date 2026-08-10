@@ -10,12 +10,15 @@ namespace InspectionSketch.Drawing
 
         public double GridSpacing { get; set; } = DefaultGridSpacing;
         public double Zoom { get; set; } = 1.0;
-      
+        public Point Offset { get; set; } = new Point(0, 0);
         public void Draw(DrawingContext drawingContext, Size size)
         {
             gridRenderer.GridSpacing = GridSpacing;           
             gridRenderer.Zoom = Zoom;
+            gridRenderer.Offset = Offset;
+
             gridRenderer.Draw(drawingContext, size);
+
         }
     }
 }
