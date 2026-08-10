@@ -10,7 +10,7 @@
 
     <Grid>
         <drawing:SketchCanvas x:Name="DrawingCanvas"
-                              Background="#252525"
+                              Background="White"
                               MouseLeftButtonDown="DrawingCanvas_MouseLeftButtonDown" />
     </Grid>
 

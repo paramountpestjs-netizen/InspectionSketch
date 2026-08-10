@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Media;
 
 namespace InspectionSketch.Drawing
@@ -7,11 +9,12 @@ namespace InspectionSketch.Drawing
     {
         private readonly Camera camera = new Camera();
         private readonly DrawingRenderer drawingRenderer = new();
-
+      
         private bool isPanning = false;
         private Point lastPanPoint;
         private Point? wallStartPoint = null;
         private Point? wallPreviewPoint = null;
+        private readonly List<(Point Start, Point End)> completedWalls = new();
 
         public SketchCanvas()
         {
@@ -29,26 +32,7 @@ namespace InspectionSketch.Drawing
             KeyDown += SketchCanvas_KeyDown;
         }
 
-        protected override void OnRender(DrawingContext drawingContext)
-        {
-
-            base.OnRender(drawingContext);
-
-
-            drawingRenderer.Zoom = camera.Zoom;
-            drawingRenderer.Offset = camera.Offset;
-            drawingRenderer.Draw(drawingContext, RenderSize);
-            if (wallStartPoint != null && wallPreviewPoint != null)
-            {
-                Pen previewPen = new Pen(Brushes.Yellow, 2);
-
-                drawingContext.DrawLine(
-                    previewPen,
-                    wallStartPoint.Value,
-                    wallPreviewPoint.Value);
-            }
-
-        }
+        
 
 
 
@@ -56,6 +40,112 @@ namespace InspectionSketch.Drawing
         {
             base.OnRenderSizeChanged(sizeInfo);
             InvalidateVisual();
+        }
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+
+            drawingRenderer.Zoom = camera.Zoom;
+            drawingRenderer.Offset = camera.Offset;
+            drawingRenderer.Draw(drawingContext, RenderSize);
+
+            Pen wallPen = new Pen(Brushes.Black, 2);
+
+            foreach (var wall in completedWalls)
+            {
+                Point start = new Point(
+                    camera.Offset.X + wall.Start.X * camera.Zoom,
+                    camera.Offset.Y + wall.Start.Y * camera.Zoom);
+
+                Point end = new Point(
+                    camera.Offset.X + wall.End.X * camera.Zoom,
+                    camera.Offset.Y + wall.End.Y * camera.Zoom);
+
+                drawingContext.DrawLine(
+                    wallPen,
+                    start,
+                    end);
+
+                double deltaX = wall.End.X - wall.Start.X;
+                double deltaY = wall.End.Y - wall.Start.Y;
+
+                double pixelLength = Math.Sqrt(
+                    deltaX * deltaX +
+                    deltaY * deltaY);
+
+                double feet = pixelLength / 25.0;
+
+                Point midpoint = new Point(
+                    (start.X + end.X) / 2,
+                    (start.Y + end.Y) / 2);
+
+                FormattedText measurementText = new FormattedText(
+                    $"{feet:F1} ft",
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface("Segoe UI"),
+                    14,
+                    Brushes.Black,
+                    1.0);
+
+                double screenDeltaX = end.X - start.X;
+                double screenDeltaY = end.Y - start.Y;
+                double screenLength = Math.Sqrt(
+                    screenDeltaX * screenDeltaX +
+                    screenDeltaY * screenDeltaY);
+
+                double offsetX = 0;
+                double offsetY = -35;
+
+                if (screenLength > 0)
+                {
+                    double normalX = -screenDeltaY / screenLength;
+                    double normalY = screenDeltaX / screenLength;
+
+                    Point drawingCenter = new Point(
+                        ActualWidth / 2,
+                        ActualHeight / 2);
+
+                    Vector fromCenter = midpoint - drawingCenter;
+
+                    double direction =
+                        normalX * fromCenter.X +
+                        normalY * fromCenter.Y;
+
+                    if (direction < 0)
+                    {
+                        normalX = -normalX;
+                        normalY = -normalY;
+                    }
+
+                    offsetX = normalX * 35;
+                    offsetY = normalY * 35;
+                }
+
+                drawingContext.DrawText(
+                    measurementText,
+                    new Point(
+                        midpoint.X + offsetX - measurementText.Width / 2,
+                        midpoint.Y + offsetY - measurementText.Height / 2));
+            }
+
+            if (wallStartPoint != null && wallPreviewPoint != null)
+            {
+                Pen previewPen = new Pen(Brushes.RoyalBlue, 2);
+
+                Point previewStart = new Point(
+                    camera.Offset.X + wallStartPoint.Value.X * camera.Zoom,
+                    camera.Offset.Y + wallStartPoint.Value.Y * camera.Zoom);
+
+                Point previewEnd = new Point(
+                    camera.Offset.X + wallPreviewPoint.Value.X * camera.Zoom,
+                    camera.Offset.Y + wallPreviewPoint.Value.Y * camera.Zoom);
+
+                drawingContext.DrawLine(
+                    previewPen,
+                    previewStart,
+                    previewEnd);
+            }
         }
         private void SketchCanvas_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
@@ -85,7 +175,21 @@ namespace InspectionSketch.Drawing
 
             if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
             {
-                wallStartPoint = e.GetPosition(this);
+                Point clickPoint = SnapToGrid(e.GetPosition(this));
+
+                if (wallStartPoint == null)
+                {
+                    wallStartPoint = clickPoint;
+                }
+                else
+                {
+                    completedWalls.Add((wallStartPoint.Value, clickPoint));
+
+                    wallStartPoint = clickPoint;
+                    wallPreviewPoint = clickPoint;
+
+                    InvalidateVisual();
+                }
             }
         }
 
@@ -105,7 +209,7 @@ namespace InspectionSketch.Drawing
             }
             if (wallStartPoint != null && !isPanning)
             {
-                wallPreviewPoint = e.GetPosition(this);
+                wallPreviewPoint = SnapToGrid(e.GetPosition(this));
                 InvalidateVisual();
             }
         }
@@ -118,7 +222,21 @@ namespace InspectionSketch.Drawing
                 ReleaseMouseCapture();
             }
         }
+        private Point SnapToGrid(Point point)
+        {
+            double worldX = (point.X - camera.Offset.X) / camera.Zoom;
+            double worldY = (point.Y - camera.Offset.Y) / camera.Zoom;
 
+            double spacing = DrawingRenderer.DefaultGridSpacing;
+
+            double snappedX =
+                Math.Round(worldX / spacing) * spacing;
+
+            double snappedY =
+                Math.Round(worldY / spacing) * spacing;
+
+            return new Point(snappedX, snappedY);
+        }
         private void SketchCanvas_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.F)
@@ -126,6 +244,14 @@ namespace InspectionSketch.Drawing
                 camera.Reset();
                 InvalidateVisual();
             }
-        }
+
+            if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                wallStartPoint = null;
+                wallPreviewPoint = null;
+                InvalidateVisual();
+            }
+        
+    }
     }
 }

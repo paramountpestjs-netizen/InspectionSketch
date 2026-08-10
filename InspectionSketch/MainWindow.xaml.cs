@@ -69,16 +69,6 @@ namespace InspectionSketch
 
         private void DrawingCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Point currentPoint = SnapToGrid(e.GetPosition(DrawingCanvas));
-
-            DrawPoint(currentPoint);
-
-            if (lastPoint != null)
-            {
-                DrawWall(lastPoint.Value, currentPoint);
-            }
-
-            lastPoint = currentPoint;
         }
 
 

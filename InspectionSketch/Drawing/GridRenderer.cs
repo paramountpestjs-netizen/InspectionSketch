@@ -17,8 +17,7 @@ namespace InspectionSketch.Drawing
             double scaledSpacing = GridSpacing * Zoom;
 
             Pen pen = new Pen(
-                new SolidColorBrush(Color.FromRgb(65, 65, 65)),
-                0.5);
+     new SolidColorBrush(Color.FromRgb(210, 210, 210)), 0.5);
 
             for (double x = Offset.X % scaledSpacing; x <= size.Width; x += scaledSpacing)
             {
