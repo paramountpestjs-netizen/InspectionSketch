@@ -22,22 +22,23 @@ namespace InspectionSketch.Drawing
             MouseDown += SketchCanvas_MouseDown;
             MouseMove += SketchCanvas_MouseMove;
             MouseUp += SketchCanvas_MouseUp;
+            KeyDown += SketchCanvas_KeyDown;
         }
-        
+
         protected override void OnRender(DrawingContext drawingContext)
         {
-            
+
             base.OnRender(drawingContext);
 
 
             drawingRenderer.Zoom = camera.Zoom;
             drawingRenderer.Offset = camera.Offset;
             drawingRenderer.Draw(drawingContext, RenderSize);
-            
+
 
         }
 
-        
+
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
@@ -46,19 +47,23 @@ namespace InspectionSketch.Drawing
         }
         private void SketchCanvas_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
+            Point mousePosition = e.GetPosition(this);
+
             if (e.Delta > 0)
             {
-                camera.ZoomIn(1.1);
+                camera.ZoomAt(mousePosition, 1.1);
             }
             else
             {
-                camera.ZoomOut(1.1);
+                camera.ZoomAt(mousePosition, 1 / 1.1);
             }
 
             InvalidateVisual();
         }
         private void SketchCanvas_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            System.Windows.Input.Keyboard.Focus(this);
+
             if (e.ChangedButton == System.Windows.Input.MouseButton.Middle)
             {
                 isPanning = true;
@@ -89,6 +94,15 @@ namespace InspectionSketch.Drawing
             {
                 isPanning = false;
                 ReleaseMouseCapture();
+            }
+        }
+
+        private void SketchCanvas_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.F)
+            {
+                camera.Reset();
+                InvalidateVisual();
             }
         }
     }
