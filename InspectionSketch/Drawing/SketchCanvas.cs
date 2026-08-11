@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using InspectionSketch.Models;
+
 
 namespace InspectionSketch.Drawing
 {
@@ -18,6 +20,9 @@ namespace InspectionSketch.Drawing
         private Point? wallPreviewPoint = null;
         private readonly Sketch sketch = new();
         private Wall? selectedWall = null;
+
+        private readonly Stack<(Action Undo, Action Redo)> undoStack = new();
+        private readonly Stack<(Action Undo, Action Redo)> redoStack = new();
 
         public event Action<Wall?>? SelectedWallChanged;
         public SketchCanvas()
@@ -112,11 +117,26 @@ namespace InspectionSketch.Drawing
                 }
                 else
                 {
-                    sketch.Walls.Add(new Wall
+                    Wall newWall = new Wall
                     {
                         StartPoint = wallStartPoint.Value,
                         EndPoint = clickPoint
-                    });
+                    };
+
+                    sketch.Walls.Add(newWall);
+
+                    undoStack.Push((
+                        Undo: () =>
+                        {
+                            sketch.Walls.Remove(newWall);
+                        },
+                        Redo: () =>
+                        {
+                            sketch.Walls.Add(newWall);
+                        }
+                    ));
+
+                    redoStack.Clear();
 
                     wallStartPoint = clickPoint;
                     wallPreviewPoint = clickPoint;
@@ -236,7 +256,34 @@ namespace InspectionSketch.Drawing
 
             return null;
         }
+        private List<(Wall Wall, Point Start, Point End)> CaptureWallStates()
+        {
+            List<(Wall Wall, Point Start, Point End)> states = new();
+
+            foreach (Wall wall in sketch.Walls)
+            {
+                states.Add((
+                    wall,
+                    wall.StartPoint,
+                    wall.EndPoint));
+            }
+
+            return states;
+        }
+
+        private void RestoreWallStates(
+            List<(Wall Wall, Point Start, Point End)> states)
+        {
+            foreach (var state in states)
+            {
+                state.Wall.StartPoint = state.Start;
+                state.Wall.EndPoint = state.End;
+            }
+
+            InvalidateVisual();
+        }
         private void SetWallLength(Wall wall, double newLengthInFeet)
+
         {
             double currentLength = wall.Length;
 
@@ -304,7 +351,34 @@ namespace InspectionSketch.Drawing
             if (selectedWall == null)
                 return;
 
-            sketch.Walls.Remove(selectedWall);
+            Wall wallToDelete = selectedWall;
+
+            int wallIndex = sketch.Walls.IndexOf(wallToDelete);
+
+            sketch.Walls.Remove(wallToDelete);
+
+            undoStack.Push((
+                Undo: () =>
+                {
+                    if (wallIndex >= 0 &&
+                        wallIndex <= sketch.Walls.Count)
+                    {
+                        sketch.Walls.Insert(
+                            wallIndex,
+                            wallToDelete);
+                    }
+                    else
+                    {
+                        sketch.Walls.Add(wallToDelete);
+                    }
+                },
+                Redo: () =>
+                {
+                    sketch.Walls.Remove(wallToDelete);
+                }
+            ));
+
+            redoStack.Clear();
 
             selectedWall = null;
 
@@ -367,13 +441,42 @@ namespace InspectionSketch.Drawing
                     selectedWall,
                     newLengthInFeet);
 
+
                 SelectedWallChanged?.Invoke(selectedWall);
             }
         }
     }
 }
+        public void Undo()
+        {
+            if (undoStack.Count == 0)
+                return;
+
+            var action = undoStack.Pop();
+
+            action.Undo();
+
+            redoStack.Push(action);
+
+            InvalidateVisual();
+        }
+
+        public void Redo()
+        {
+            if (redoStack.Count == 0)
+                return;
+
+            var action = redoStack.Pop();
+
+            action.Redo();
+
+            undoStack.Push(action);
+
+            InvalidateVisual();
+        }
         private void SketchCanvas_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+           
             if (e.Key == System.Windows.Input.Key.F)
             {
                 camera.Reset();

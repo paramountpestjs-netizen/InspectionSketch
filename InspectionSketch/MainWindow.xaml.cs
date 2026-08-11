@@ -19,6 +19,27 @@ namespace InspectionSketch
             InitializeComponent();
 
             DrawingCanvas.SelectedWallChanged += DrawingCanvas_SelectedWallChanged;
+            PreviewKeyDown += MainWindow_PreviewKeyDown;
+        }
+        private void MainWindow_PreviewKeyDown(
+           object sender,
+           KeyEventArgs e)
+        {
+            if (e.Key == Key.Z &&
+                Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                DrawingCanvas.Undo();
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Y &&
+                Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                DrawingCanvas.Redo();
+                e.Handled = true;
+                return;
+            }
         }
         private void DrawingCanvas_SelectedWallChanged(Wall? wall)
         {
