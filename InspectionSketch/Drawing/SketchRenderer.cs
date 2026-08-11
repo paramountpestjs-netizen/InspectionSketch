@@ -13,6 +13,9 @@ namespace InspectionSketch.Drawing
             Sketch sketch,
             Camera camera)
         {
+
+            double normalDirection = GetWallNormalDirection(sketch);
+
             foreach (var wall in sketch.Walls)
             {
                 Point start = new Point(
@@ -34,8 +37,29 @@ namespace InspectionSketch.Drawing
                     drawingContext,
                     start,
                     end,
-                    feet);
+                    feet,
+                    normalDirection);
             }
+        }
+
+        private double GetWallNormalDirection(Sketch sketch)
+        {
+            if (sketch.Walls.Count < 3)
+                return 1.0;
+
+            double signedArea = 0;
+
+            foreach (var wall in sketch.Walls)
+            {
+                signedArea +=
+                    wall.StartPoint.X * wall.EndPoint.Y -
+                    wall.StartPoint.Y * wall.EndPoint.X;
+            }
+
+            if (signedArea > 0)
+                return -1.0;
+
+            return 1.0;
         }
     }
 }

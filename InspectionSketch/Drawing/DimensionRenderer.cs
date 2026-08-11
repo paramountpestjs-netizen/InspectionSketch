@@ -10,7 +10,8 @@ namespace InspectionSketch.Drawing
     DrawingContext drawingContext,
     Point start,
     Point end,
-    double feet)
+    double feet,
+    double normalDirection)
         {
             double deltaX = end.X - start.X;
             double deltaY = end.Y - start.Y;
@@ -22,8 +23,8 @@ namespace InspectionSketch.Drawing
             if (length <= 0)
                 return;
 
-            double normalX = -deltaY / length;
-            double normalY = deltaX / length;
+            double normalX = (-deltaY / length) * normalDirection;
+            double normalY = (deltaX / length) * normalDirection;
 
             double offsetDistance = 50;
 
