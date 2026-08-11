@@ -17,7 +17,7 @@ namespace InspectionSketch.Drawing
         private Point? wallStartPoint = null;
         private Point? wallPreviewPoint = null;
         private readonly Sketch sketch = new();
-
+        private Wall? selectedWall = null;
         public SketchCanvas()
         {
             ClipToBounds = true;
@@ -31,6 +31,7 @@ namespace InspectionSketch.Drawing
             MouseDown += SketchCanvas_MouseDown;
             MouseMove += SketchCanvas_MouseMove;
             MouseUp += SketchCanvas_MouseUp;
+            MouseRightButtonDown += SketchCanvas_MouseRightButtonDown;
             KeyDown += SketchCanvas_KeyDown;
         }
 
@@ -51,10 +52,11 @@ namespace InspectionSketch.Drawing
             drawingRenderer.Offset = camera.Offset;
             drawingRenderer.Draw(drawingContext, RenderSize);
 
-                sketchRenderer.Draw(
-                 drawingContext,
-                 sketch,
-                 camera);
+            sketchRenderer.Draw(
+               drawingContext,
+               sketch,
+               camera,
+               selectedWall);
 
             if (wallStartPoint != null && wallPreviewPoint != null)
             {
@@ -166,6 +168,133 @@ namespace InspectionSketch.Drawing
 
             return new Point(snappedX, snappedY);
         }
+        private void SketchCanvas_MouseRightButtonDown(
+            object sender,
+            System.Windows.Input.MouseButtonEventArgs e)
+        {
+            Point clickPoint = e.GetPosition(this);
+
+            selectedWall = FindWallAtPoint(clickPoint);
+
+            InvalidateVisual();
+
+            e.Handled = true;
+        }
+        private Wall? 
+            FindWallAtPoint(Point screenPoint)
+        {
+            const double selectionTolerance = 8.0;
+
+            foreach (var wall in sketch.Walls)
+            {
+                Point start = new Point(
+                    camera.Offset.X + wall.StartPoint.X * camera.Zoom,
+                    camera.Offset.Y + wall.StartPoint.Y * camera.Zoom);
+
+                Point end = new Point(
+                    camera.Offset.X + wall.EndPoint.X * camera.Zoom,
+                    camera.Offset.Y + wall.EndPoint.Y * camera.Zoom);
+
+                Vector wallVector = end - start;
+                Vector pointVector = screenPoint - start;
+
+                double wallLengthSquared = wallVector.LengthSquared;
+
+                if (wallLengthSquared == 0)
+                    continue;
+
+                double t = Vector.Multiply(
+                    pointVector,
+                    wallVector) / wallLengthSquared;
+
+                t = Math.Max(0, Math.Min(1, t));
+
+                Point closestPoint = start + wallVector * t;
+
+                double distance = (screenPoint - closestPoint).Length;
+
+                if (distance <= selectionTolerance)
+                    return wall;
+            }
+
+            return null;
+        }
+        private Wall? FindWallConnectedToEnd(Wall wall)
+        {
+            foreach (var otherWall in sketch.Walls)
+            {
+                if (otherWall == wall)
+                    continue;
+
+                if (otherWall.StartPoint == wall.EndPoint)
+                    return otherWall;
+            }
+
+            return null;
+        }
+        private void SetWallLength(Wall wall, double newLengthInFeet)
+        {
+            double currentLength = wall.Length;
+
+            if (currentLength <= 0)
+                return;
+
+            Wall? connectedWall = FindWallConnectedToEnd(wall);
+
+            Wall? followingWall = null;
+
+            if (connectedWall != null)
+            {
+                followingWall = FindWallConnectedToEnd(connectedWall);
+            }
+
+            double newLengthInPixels =
+                newLengthInFeet * sketch.Settings.PixelsPerFoot;
+
+            Vector direction = wall.EndPoint - wall.StartPoint;
+
+            // Keep walls that are mostly horizontal or vertical perfectly straight.
+            if (Math.Abs(direction.X) >= Math.Abs(direction.Y))
+            {
+                direction = new Vector(
+                    Math.Sign(direction.X),
+                    0);
+            }
+            else
+            {
+                direction = new Vector(
+                    0,
+                    Math.Sign(direction.Y));
+            }
+
+            Point oldEndPoint = wall.EndPoint;
+
+            Point newEndPoint =
+                wall.StartPoint +
+                direction * newLengthInPixels;
+
+            Vector movement = newEndPoint - oldEndPoint;
+
+            wall.EndPoint = newEndPoint;
+
+            if (connectedWall != null)
+            {
+                connectedWall.StartPoint =
+                    connectedWall.StartPoint + movement;
+
+                connectedWall.EndPoint =
+                    connectedWall.EndPoint + movement;
+
+                if (followingWall != null &&
+                    followingWall != wall)
+                {
+                    followingWall.StartPoint =
+                        connectedWall.EndPoint;
+                }
+            }
+
+            InvalidateVisual();
+        }
         private void SketchCanvas_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.F)
@@ -180,7 +309,61 @@ namespace InspectionSketch.Drawing
                 wallPreviewPoint = null;
                 InvalidateVisual();
             }
+            if (e.Key == System.Windows.Input.Key.M && selectedWall != null)
+            {
+                double currentFeet =
+    selectedWall.Length / sketch.Settings.PixelsPerFoot;
 
+                int wholeFeet = (int)Math.Floor(currentFeet);
+
+                int inches = (int)Math.Round(
+                    (currentFeet - wholeFeet) * 12);
+
+                if (inches == 12)
+                {
+                    wholeFeet++;
+                    inches = 0;
+                }
+
+                string input = Microsoft.VisualBasic.Interaction.InputBox(
+                    "Enter wall length (example: 10 6 for 10'-6\"):",
+                    "Set Wall Length",
+                    $"{wholeFeet} {inches}");
+
+                string[] parts = input
+                    .Replace("'", " ")
+                    .Replace("\"", " ")
+                    .Replace("-", " ")
+                    .Split(
+                          ' ',
+                          StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length >= 1 &&
+                    int.TryParse(parts[0], out int enteredFeet))
+                {
+                    int enteredInches = 0;
+
+                    if (parts.Length >= 2)
+                    {
+                        int.TryParse(parts[1], out enteredInches);
+                    }
+
+                    if (enteredFeet >= 0 &&
+                        enteredInches >= 0 &&
+                        enteredInches < 12)
+                    {
+                        double newLengthInFeet =
+                            enteredFeet + enteredInches / 12.0;
+
+                        if (newLengthInFeet > 0)
+                        {
+                            SetWallLength(
+                                selectedWall,
+                                newLengthInFeet);
+                        }
+                    }
+                }
+            }
         }
     }
     }

@@ -1,5 +1,8 @@
-﻿using System.Windows;
+﻿using InspectionSketch.Models;
+using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Media;
+
 
 namespace InspectionSketch.Drawing
 {
@@ -9,12 +12,15 @@ namespace InspectionSketch.Drawing
         private readonly DimensionRenderer dimensionRenderer = new();
 
         public void Draw(
-            DrawingContext drawingContext,
-            Sketch sketch,
-            Camera camera)
+           DrawingContext drawingContext,
+           Sketch sketch,
+           Camera camera,
+           Wall? selectedWall)
         {
 
             double normalDirection = GetWallNormalDirection(sketch);
+
+            List<Rect> occupiedDimensionBounds = new();
 
             foreach (var wall in sketch.Walls)
             {
@@ -29,16 +35,23 @@ namespace InspectionSketch.Drawing
                 wallRenderer.DrawWall(
                     drawingContext,
                     start,
-                    end);
+                    end,
+                    wall == selectedWall);
 
                 double feet = wall.Length / sketch.Settings.PixelsPerFoot;
 
-                dimensionRenderer.Draw(
-                    drawingContext,
-                    start,
-                    end,
-                    feet,
-                    normalDirection);
+                Rect dimensionBounds = dimensionRenderer.Draw(
+                   drawingContext,
+                   start,
+                   end,
+                   feet,
+                   normalDirection,
+                   occupiedDimensionBounds);
+
+                if (!dimensionBounds.IsEmpty)
+                {
+                    occupiedDimensionBounds.Add(dimensionBounds);
+                }
             }
         }
 
