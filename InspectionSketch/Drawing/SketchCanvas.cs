@@ -18,6 +18,8 @@ namespace InspectionSketch.Drawing
         private Point? wallPreviewPoint = null;
         private readonly Sketch sketch = new();
         private Wall? selectedWall = null;
+
+        public event Action<Wall?>? SelectedWallChanged;
         public SketchCanvas()
         {
             ClipToBounds = true;
@@ -175,6 +177,8 @@ namespace InspectionSketch.Drawing
             Point clickPoint = e.GetPosition(this);
 
             selectedWall = FindWallAtPoint(clickPoint);
+            
+            SelectedWallChanged?.Invoke(selectedWall);
 
             InvalidateVisual();
 
@@ -294,6 +298,67 @@ namespace InspectionSketch.Drawing
             }
 
             InvalidateVisual();
+        }
+
+        public void EditSelectedWallLength()
+        {
+            if (selectedWall == null)
+                return;
+
+            double currentFeet =
+                selectedWall.Length / sketch.Settings.PixelsPerFoot;
+
+            int wholeFeet = (int)Math.Floor(currentFeet);
+
+            int inches = (int)Math.Round(
+                (currentFeet - wholeFeet) * 12);
+
+            if (inches == 12)
+            {
+                wholeFeet++;
+                inches = 0;
+            }
+
+            string input = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter wall length (example: 10 6 for 10'-6\"):",
+                "Set Wall Length",
+                $"{wholeFeet} {inches}");
+
+            string[] parts = input
+                .Replace("'", " ")
+                .Replace("\"", " ")
+                .Replace("-", " ")
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length >= 1 &&
+                int.TryParse(parts[0], out int enteredFeet))
+            {
+                int enteredInches = 0;
+
+                if (parts.Length >= 2)
+                {
+                    int.TryParse(parts[1], out enteredInches);
+                }
+
+                if (enteredFeet >= 0 &&
+                    enteredInches >= 0 &&
+                    enteredInches < 12)
+                {
+                    double newLengthInFeet =
+                        enteredFeet + enteredInches / 12.0;
+
+                    if (newLengthInFeet > 0)
+                    {
+                        SetWallLength(
+                            selectedWall,
+                            newLengthInFeet);
+
+                        SelectedWallChanged?.Invoke(selectedWall);
+                    }
+                }
+            }
         }
         private void SketchCanvas_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {

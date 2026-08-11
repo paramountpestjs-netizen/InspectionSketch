@@ -9,9 +9,47 @@
         Loaded="Window_Loaded">
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="220" />
+        </Grid.ColumnDefinitions>
+
         <drawing:SketchCanvas x:Name="DrawingCanvas"
-                              Background="White"
-                              MouseLeftButtonDown="DrawingCanvas_MouseLeftButtonDown" />
+                          Grid.Column="0"
+                          Background="White"
+                          MouseLeftButtonDown="DrawingCanvas_MouseLeftButtonDown" />
+
+        <Border Grid.Column="1"
+            Background="#F3F3F3"
+            BorderBrush="#CCCCCC"
+            BorderThickness="1,0,0,0"
+            Padding="15">
+
+            <StackPanel>
+                <TextBlock Text="Selected Wall"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="Black"
+                       Margin="0,0,0,15" />
+
+                <TextBlock Text="Length"
+                       Foreground="Black"
+                       FontWeight="SemiBold" />
+
+                <TextBlock x:Name="SelectedWallLengthText"
+                       Text="No wall selected"
+                       Foreground="Black"
+                       FontSize="16"
+                       Margin="0,5,0,15" />
+
+                <Button x:Name="EditWallLengthButton"
+                       Content="Edit Length"
+                       Height="32"
+                       IsEnabled="False"
+                       Click="EditWallLengthButton_Click" />
+            </StackPanel>
+
+        </Border>
     </Grid>
 
 </Window>

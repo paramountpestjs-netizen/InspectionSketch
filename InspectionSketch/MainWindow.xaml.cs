@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using InspectionSketch.Drawing;
+
 namespace InspectionSketch
 {
     public partial class MainWindow : Window
@@ -17,9 +17,45 @@ namespace InspectionSketch
         public MainWindow()
         {
             InitializeComponent();
+
+            DrawingCanvas.SelectedWallChanged += DrawingCanvas_SelectedWallChanged;
         }
+        private void DrawingCanvas_SelectedWallChanged(Wall? wall)
+        {
+            if (wall == null)
+            {
+                SelectedWallLengthText.Text = "No wall selected";
+                EditWallLengthButton.IsEnabled = false;
+                return;
+            }
 
+            double feet =
+                wall.Length / 25.0;
 
+            int wholeFeet =
+                (int)System.Math.Floor(feet);
+
+            int inches =
+                (int)System.Math.Round(
+                    (feet - wholeFeet) * 12);
+
+            if (inches == 12)
+            {
+                wholeFeet++;
+                inches = 0;
+            }
+
+            SelectedWallLengthText.Text =
+                $"{wholeFeet}'-{inches}\"";
+
+            EditWallLengthButton.IsEnabled = true;
+        }
+        private void EditWallLengthButton_Click(
+             object sender,
+             RoutedEventArgs e)
+        {
+            DrawingCanvas.EditSelectedWallLength();
+        }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // The SketchCanvas now draws its own grid.
