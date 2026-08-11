@@ -9,8 +9,8 @@ namespace InspectionSketch.Drawing
     {
         private readonly Camera camera = new Camera();
         private readonly DrawingRenderer drawingRenderer = new();
-        private readonly DimensionRenderer dimensionRenderer = new();
-        private readonly WallRenderer wallRenderer = new();
+        private readonly SketchRenderer sketchRenderer = new();
+        private readonly PreviewRenderer previewRenderer = new();
 
         private bool isPanning = false;
         private Point lastPanPoint;
@@ -50,44 +50,14 @@ namespace InspectionSketch.Drawing
             drawingRenderer.Zoom = camera.Zoom;
             drawingRenderer.Offset = camera.Offset;
             drawingRenderer.Draw(drawingContext, RenderSize);
-            
-            
 
-            foreach (var wall in sketch.Walls)
-            {
-                Point start = new Point(
-                    camera.Offset.X + wall.StartPoint.X * camera.Zoom,
-                    camera.Offset.Y + wall.StartPoint.Y * camera.Zoom);
+                sketchRenderer.Draw(
+                 drawingContext,
+                 sketch,
+                 camera);
 
-                Point end = new Point(
-                    camera.Offset.X + wall.EndPoint.X * camera.Zoom,
-                    camera.Offset.Y + wall.EndPoint.Y * camera.Zoom);
-
-                drawingContext.DrawLine(
-                    new Pen(Brushes.Black, 2),
-                    start,
-                    end);
-
-                double deltaX = wall.EndPoint.X - wall.StartPoint.X;
-                double deltaY = wall.EndPoint.Y - wall.StartPoint.Y;
-
-                double pixelLength = Math.Sqrt(
-                    deltaX * deltaX +
-                    deltaY * deltaY);
-
-                double feet = pixelLength / sketch.Settings.PixelsPerFoot;
-
-                dimensionRenderer.Draw(
-                    drawingContext,
-                    start,
-                    end,
-                    feet);
-            }
-                
             if (wallStartPoint != null && wallPreviewPoint != null)
             {
-                Pen previewPen = new Pen(Brushes.RoyalBlue, 2);
-
                 Point previewStart = new Point(
                     camera.Offset.X + wallStartPoint.Value.X * camera.Zoom,
                     camera.Offset.Y + wallStartPoint.Value.Y * camera.Zoom);
@@ -96,8 +66,8 @@ namespace InspectionSketch.Drawing
                     camera.Offset.X + wallPreviewPoint.Value.X * camera.Zoom,
                     camera.Offset.Y + wallPreviewPoint.Value.Y * camera.Zoom);
 
-                drawingContext.DrawLine(
-                    previewPen,
+                previewRenderer.Draw(
+                    drawingContext,
                     previewStart,
                     previewEnd);
             }
