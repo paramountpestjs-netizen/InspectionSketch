@@ -299,67 +299,79 @@ namespace InspectionSketch.Drawing
 
             InvalidateVisual();
         }
-
-        public void EditSelectedWallLength()
+        public void DeleteSelectedWall()
         {
             if (selectedWall == null)
                 return;
 
-            double currentFeet =
-                selectedWall.Length / sketch.Settings.PixelsPerFoot;
+            sketch.Walls.Remove(selectedWall);
 
-            int wholeFeet = (int)Math.Floor(currentFeet);
+            selectedWall = null;
 
-            int inches = (int)Math.Round(
-                (currentFeet - wholeFeet) * 12);
+            SelectedWallChanged?.Invoke(null);
 
-            if (inches == 12)
+            InvalidateVisual();
+        }
+        public void EditSelectedWallLength()
+{
+    if (selectedWall == null)
+        return;
+
+    double currentFeet =
+        selectedWall.Length / sketch.Settings.PixelsPerFoot;
+
+    int wholeFeet = (int)Math.Floor(currentFeet);
+
+    int inches = (int)Math.Round(
+        (currentFeet - wholeFeet) * 12);
+
+    if (inches == 12)
+    {
+        wholeFeet++;
+        inches = 0;
+    }
+
+    string input = Microsoft.VisualBasic.Interaction.InputBox(
+        "Enter wall length (example: 10 6 for 10'-6\"):",
+        "Set Wall Length",
+        $"{wholeFeet} {inches}");
+
+    string[] parts = input
+        .Replace("'", " ")
+        .Replace("\"", " ")
+        .Replace("-", " ")
+        .Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries);
+
+    if (parts.Length >= 1 &&
+        int.TryParse(parts[0], out int enteredFeet))
+    {
+        int enteredInches = 0;
+
+        if (parts.Length >= 2)
+        {
+            int.TryParse(parts[1], out enteredInches);
+        }
+
+        if (enteredFeet >= 0 &&
+            enteredInches >= 0 &&
+            enteredInches < 12)
+        {
+            double newLengthInFeet =
+                enteredFeet + enteredInches / 12.0;
+
+            if (newLengthInFeet > 0)
             {
-                wholeFeet++;
-                inches = 0;
-            }
+                SetWallLength(
+                    selectedWall,
+                    newLengthInFeet);
 
-            string input = Microsoft.VisualBasic.Interaction.InputBox(
-                "Enter wall length (example: 10 6 for 10'-6\"):",
-                "Set Wall Length",
-                $"{wholeFeet} {inches}");
-
-            string[] parts = input
-                .Replace("'", " ")
-                .Replace("\"", " ")
-                .Replace("-", " ")
-                .Split(
-                    ' ',
-                    StringSplitOptions.RemoveEmptyEntries);
-
-            if (parts.Length >= 1 &&
-                int.TryParse(parts[0], out int enteredFeet))
-            {
-                int enteredInches = 0;
-
-                if (parts.Length >= 2)
-                {
-                    int.TryParse(parts[1], out enteredInches);
-                }
-
-                if (enteredFeet >= 0 &&
-                    enteredInches >= 0 &&
-                    enteredInches < 12)
-                {
-                    double newLengthInFeet =
-                        enteredFeet + enteredInches / 12.0;
-
-                    if (newLengthInFeet > 0)
-                    {
-                        SetWallLength(
-                            selectedWall,
-                            newLengthInFeet);
-
-                        SelectedWallChanged?.Invoke(selectedWall);
-                    }
-                }
+                SelectedWallChanged?.Invoke(selectedWall);
             }
         }
+    }
+}
         private void SketchCanvas_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.F)
@@ -376,58 +388,7 @@ namespace InspectionSketch.Drawing
             }
             if (e.Key == System.Windows.Input.Key.M && selectedWall != null)
             {
-                double currentFeet =
-    selectedWall.Length / sketch.Settings.PixelsPerFoot;
-
-                int wholeFeet = (int)Math.Floor(currentFeet);
-
-                int inches = (int)Math.Round(
-                    (currentFeet - wholeFeet) * 12);
-
-                if (inches == 12)
-                {
-                    wholeFeet++;
-                    inches = 0;
-                }
-
-                string input = Microsoft.VisualBasic.Interaction.InputBox(
-                    "Enter wall length (example: 10 6 for 10'-6\"):",
-                    "Set Wall Length",
-                    $"{wholeFeet} {inches}");
-
-                string[] parts = input
-                    .Replace("'", " ")
-                    .Replace("\"", " ")
-                    .Replace("-", " ")
-                    .Split(
-                          ' ',
-                          StringSplitOptions.RemoveEmptyEntries);
-
-                if (parts.Length >= 1 &&
-                    int.TryParse(parts[0], out int enteredFeet))
-                {
-                    int enteredInches = 0;
-
-                    if (parts.Length >= 2)
-                    {
-                        int.TryParse(parts[1], out enteredInches);
-                    }
-
-                    if (enteredFeet >= 0 &&
-                        enteredInches >= 0 &&
-                        enteredInches < 12)
-                    {
-                        double newLengthInFeet =
-                            enteredFeet + enteredInches / 12.0;
-
-                        if (newLengthInFeet > 0)
-                        {
-                            SetWallLength(
-                                selectedWall,
-                                newLengthInFeet);
-                        }
-                    }
-                }
+                EditSelectedWallLength();
             }
         }
     }

@@ -26,6 +26,7 @@ namespace InspectionSketch
             {
                 SelectedWallLengthText.Text = "No wall selected";
                 EditWallLengthButton.IsEnabled = false;
+                DeleteWallButton.IsEnabled = false;
                 return;
             }
 
@@ -49,12 +50,19 @@ namespace InspectionSketch
                 $"{wholeFeet}'-{inches}\"";
 
             EditWallLengthButton.IsEnabled = true;
+            DeleteWallButton.IsEnabled = true;
         }
         private void EditWallLengthButton_Click(
              object sender,
              RoutedEventArgs e)
         {
             DrawingCanvas.EditSelectedWallLength();
+        }
+        private void DeleteWallButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            DrawingCanvas.DeleteSelectedWall();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
