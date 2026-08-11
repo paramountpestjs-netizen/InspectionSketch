@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using InspectionSketch.Models;
 
 namespace InspectionSketch.Drawing
 {
@@ -9,12 +9,14 @@ namespace InspectionSketch.Drawing
     {
         private readonly Camera camera = new Camera();
         private readonly DrawingRenderer drawingRenderer = new();
-      
+        private readonly DimensionRenderer dimensionRenderer = new();
+        private readonly WallRenderer wallRenderer = new();
+
         private bool isPanning = false;
         private Point lastPanPoint;
         private Point? wallStartPoint = null;
         private Point? wallPreviewPoint = null;
-        private readonly List<(Point Start, Point End)> completedWalls = new();
+        private readonly Sketch sketch = new();
 
         public SketchCanvas()
         {
@@ -23,7 +25,7 @@ namespace InspectionSketch.Drawing
             Cursor = System.Windows.Input.Cursors.Cross;
 
             drawingRenderer.GridSpacing = DrawingRenderer.DefaultGridSpacing;
-           
+
             MouseWheel += SketchCanvas_MouseWheel;
 
             MouseDown += SketchCanvas_MouseDown;
@@ -32,7 +34,7 @@ namespace InspectionSketch.Drawing
             KeyDown += SketchCanvas_KeyDown;
         }
 
-        
+
 
 
 
@@ -48,87 +50,40 @@ namespace InspectionSketch.Drawing
             drawingRenderer.Zoom = camera.Zoom;
             drawingRenderer.Offset = camera.Offset;
             drawingRenderer.Draw(drawingContext, RenderSize);
+            
+            
 
-            Pen wallPen = new Pen(Brushes.Black, 2);
-
-            foreach (var wall in completedWalls)
+            foreach (var wall in sketch.Walls)
             {
                 Point start = new Point(
-                    camera.Offset.X + wall.Start.X * camera.Zoom,
-                    camera.Offset.Y + wall.Start.Y * camera.Zoom);
+                    camera.Offset.X + wall.StartPoint.X * camera.Zoom,
+                    camera.Offset.Y + wall.StartPoint.Y * camera.Zoom);
 
                 Point end = new Point(
-                    camera.Offset.X + wall.End.X * camera.Zoom,
-                    camera.Offset.Y + wall.End.Y * camera.Zoom);
+                    camera.Offset.X + wall.EndPoint.X * camera.Zoom,
+                    camera.Offset.Y + wall.EndPoint.Y * camera.Zoom);
 
                 drawingContext.DrawLine(
-                    wallPen,
+                    new Pen(Brushes.Black, 2),
                     start,
                     end);
 
-                double deltaX = wall.End.X - wall.Start.X;
-                double deltaY = wall.End.Y - wall.Start.Y;
+                double deltaX = wall.EndPoint.X - wall.StartPoint.X;
+                double deltaY = wall.EndPoint.Y - wall.StartPoint.Y;
 
                 double pixelLength = Math.Sqrt(
                     deltaX * deltaX +
                     deltaY * deltaY);
 
-                double feet = pixelLength / 25.0;
+                double feet = pixelLength / sketch.Settings.PixelsPerFoot;
 
-                Point midpoint = new Point(
-                    (start.X + end.X) / 2,
-                    (start.Y + end.Y) / 2);
-
-                FormattedText measurementText = new FormattedText(
-                    $"{feet:F1} ft",
-                    System.Globalization.CultureInfo.CurrentCulture,
-                    FlowDirection.LeftToRight,
-                    new Typeface("Segoe UI"),
-                    14,
-                    Brushes.Black,
-                    1.0);
-
-                double screenDeltaX = end.X - start.X;
-                double screenDeltaY = end.Y - start.Y;
-                double screenLength = Math.Sqrt(
-                    screenDeltaX * screenDeltaX +
-                    screenDeltaY * screenDeltaY);
-
-                double offsetX = 0;
-                double offsetY = -35;
-
-                if (screenLength > 0)
-                {
-                    double normalX = -screenDeltaY / screenLength;
-                    double normalY = screenDeltaX / screenLength;
-
-                    Point drawingCenter = new Point(
-                        ActualWidth / 2,
-                        ActualHeight / 2);
-
-                    Vector fromCenter = midpoint - drawingCenter;
-
-                    double direction =
-                        normalX * fromCenter.X +
-                        normalY * fromCenter.Y;
-
-                    if (direction < 0)
-                    {
-                        normalX = -normalX;
-                        normalY = -normalY;
-                    }
-
-                    offsetX = normalX * 35;
-                    offsetY = normalY * 35;
-                }
-
-                drawingContext.DrawText(
-                    measurementText,
-                    new Point(
-                        midpoint.X + offsetX - measurementText.Width / 2,
-                        midpoint.Y + offsetY - measurementText.Height / 2));
+                dimensionRenderer.Draw(
+                    drawingContext,
+                    start,
+                    end,
+                    feet);
             }
-
+                
             if (wallStartPoint != null && wallPreviewPoint != null)
             {
                 Pen previewPen = new Pen(Brushes.RoyalBlue, 2);
@@ -183,7 +138,11 @@ namespace InspectionSketch.Drawing
                 }
                 else
                 {
-                    completedWalls.Add((wallStartPoint.Value, clickPoint));
+                    sketch.Walls.Add(new Wall
+                    {
+                        StartPoint = wallStartPoint.Value,
+                        EndPoint = clickPoint
+                    });
 
                     wallStartPoint = clickPoint;
                     wallPreviewPoint = clickPoint;
@@ -251,7 +210,7 @@ namespace InspectionSketch.Drawing
                 wallPreviewPoint = null;
                 InvalidateVisual();
             }
-        
+
+        }
     }
     }
-}
