@@ -117,6 +117,35 @@ namespace InspectionSketch
                 DrawingCanvas.MarkSaved();
             }
         }
+        private void SaveAsButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog
+            {
+                Title = "Save Inspection Sketch As",
+                Filter = "Inspection Sketch (*.isketch)|*.isketch",
+                DefaultExt = ".isketch",
+                AddExtension = true
+            };
+
+            if (!string.IsNullOrWhiteSpace(currentFilePath))
+            {
+                saveDialog.FileName =
+                    System.IO.Path.GetFileName(currentFilePath);
+            }
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                currentFilePath = saveDialog.FileName;
+
+                sketchFileService.Save(
+                    DrawingCanvas.CurrentSketch,
+                    currentFilePath);
+
+                DrawingCanvas.MarkSaved();
+            }
+        }
         private void NewSketchButton_Click(
     object sender,
     RoutedEventArgs e)
