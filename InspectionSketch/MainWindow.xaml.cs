@@ -21,6 +21,7 @@ namespace InspectionSketch
         private readonly SketchFileService sketchFileService = new();
         private readonly SketchMeasurementService measurementService = new();
         private string? currentFilePath = null;
+        private bool isLoadingReportInfo = false;
         private bool ConfirmDiscardUnsavedChanges()
         {
             if (!DrawingCanvas.HasUnsavedChanges)
@@ -143,6 +144,22 @@ namespace InspectionSketch
             DrawingCanvas.SelectedWallChanged += DrawingCanvas_SelectedWallChanged;
             DrawingCanvas.UnsavedChangesChanged += DrawingCanvas_UnsavedChangesChanged;
             PreviewKeyDown += MainWindow_PreviewKeyDown;
+
+            PropertyAddressTextBox.TextChanged += ReportInfoTextBox_TextChanged;
+            InspectorNameTextBox.TextChanged += ReportInfoTextBox_TextChanged;
+        }
+        private void ReportInfoTextBox_TextChanged(
+    object sender,
+    TextChangedEventArgs e)
+        {
+            if (isLoadingReportInfo)
+                return;
+
+            DrawingCanvas.CurrentSketch.ReportInfo.PropertyAddress =
+                PropertyAddressTextBox.Text;
+
+            DrawingCanvas.CurrentSketch.ReportInfo.InspectorName =
+                InspectorNameTextBox.Text;
         }
         private void DrawingCanvas_UnsavedChangesChanged()
         {
@@ -215,16 +232,20 @@ namespace InspectionSketch
             }
         }
         private void NewSketchButton_Click(
-            object sender,
-            RoutedEventArgs e)
+           object sender,
+           RoutedEventArgs e)
         {
             if (!ConfirmDiscardUnsavedChanges())
                 return;
 
             currentFilePath = null;
+
             UpdateWindowTitle();
 
             DrawingCanvas.NewSketch();
+
+            PropertyAddressTextBox.Text = "";
+            InspectorNameTextBox.Text = "";
         }
         private void OpenSketchButton_Click(
             object sender,
@@ -248,7 +269,19 @@ namespace InspectionSketch
                 if (loadedSketch != null)
                 {
                     currentFilePath = openDialog.FileName;
+
                     DrawingCanvas.LoadSketch(loadedSketch);
+
+                    isLoadingReportInfo = true;
+
+                    PropertyAddressTextBox.Text =
+                        DrawingCanvas.CurrentSketch.ReportInfo.PropertyAddress;
+
+                    InspectorNameTextBox.Text =
+                        DrawingCanvas.CurrentSketch.ReportInfo.InspectorName;
+
+                    isLoadingReportInfo = false;
+
                     UpdateWindowTitle();
                 }
             }

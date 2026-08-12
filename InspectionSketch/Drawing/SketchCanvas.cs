@@ -44,6 +44,7 @@ namespace InspectionSketch.Drawing
             }
 
             sketch.Settings = loadedSketch.Settings;
+            sketch.ReportInfo = loadedSketch.ReportInfo;
 
             selectedWall = null;
 
@@ -59,6 +60,8 @@ namespace InspectionSketch.Drawing
         {
             sketch.Walls.Clear();
             sketch.Rooms.Clear();
+            
+            sketch.ReportInfo = new InspectionReportInfo();
 
             selectedWall = null;
             wallStartPoint = null;

@@ -8,5 +8,8 @@ namespace InspectionSketch
         public List<Wall> Walls { get; set; } = new List<Wall>();
         public List<Room> Rooms { get; set; } = new List<Room>();
         public DrawingSettings Settings { get; set; } = new DrawingSettings();
+        public InspectionReportInfo ReportInfo { get; set; } =
+         new InspectionReportInfo();
+
     }
 }

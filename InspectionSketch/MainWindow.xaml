@@ -84,6 +84,28 @@
                 Click="RedoButton_Click" />
                 </Grid>
 
+                <TextBlock Text="Report Information"
+                 FontSize="18"
+                 FontWeight="Bold"
+                 Foreground="Black"
+                 Margin="0,0,0,15" />
+
+                <TextBlock Text="Property Address"
+                 Foreground="Black"
+                 FontWeight="SemiBold" />
+
+                <TextBox x:Name="PropertyAddressTextBox"
+                 Height="28"
+                 Margin="0,5,0,12" />
+
+                <TextBlock Text="Inspector Name"
+                 Foreground="Black"
+                 FontWeight="SemiBold" />
+
+                <TextBox x:Name="InspectorNameTextBox"
+                 Height="28"
+                 Margin="0,5,0,22" />
+
                 <TextBlock Text="Selected Wall"
                FontSize="18"
                FontWeight="Bold"
