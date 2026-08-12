@@ -25,12 +25,15 @@ namespace InspectionSketch.Drawing
         private readonly Stack<(Action Undo, Action Redo)> redoStack = new();
 
         public event Action<Wall?>? SelectedWallChanged;
+        public event Action? UnsavedChangesChanged;
         public Sketch CurrentSketch => sketch;
         public bool HasUnsavedChanges => hasUnsavedChanges;
         public void MarkSaved()
         {
             hasUnsavedChanges = false;
+            UnsavedChangesChanged?.Invoke();
         }
+      
         public void LoadSketch(Sketch loadedSketch)
         {
             sketch.Walls.Clear();
@@ -49,6 +52,7 @@ namespace InspectionSketch.Drawing
 
             SelectedWallChanged?.Invoke(null);
             hasUnsavedChanges = false;
+
             InvalidateVisual();
         }
         public void NewSketch()
@@ -170,6 +174,7 @@ namespace InspectionSketch.Drawing
                     sketch.Walls.Add(newWall);
                     
                     hasUnsavedChanges = true;
+                    UnsavedChangesChanged?.Invoke();
 
                     undoStack.Push((
                         Undo: () =>
@@ -404,6 +409,7 @@ namespace InspectionSketch.Drawing
             sketch.Walls.Remove(wallToDelete);
            
             hasUnsavedChanges = true;
+            UnsavedChangesChanged?.Invoke();
 
             undoStack.Push((
                 Undo: () =>
@@ -493,6 +499,8 @@ namespace InspectionSketch.Drawing
                            wallBeingEdited,
                            newLengthInFeet);
                            hasUnsavedChanges = true;
+                        UnsavedChangesChanged?.Invoke();
+
                         var afterStates = CaptureWallStates();
 
                         undoStack.Push((

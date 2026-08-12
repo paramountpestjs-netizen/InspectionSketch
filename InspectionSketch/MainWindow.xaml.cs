@@ -76,16 +76,39 @@ namespace InspectionSketch
 
             return false;
         }
+        private void UpdateWindowTitle()
+        {
+            string unsavedMarker =
+                DrawingCanvas.HasUnsavedChanges ? " *" : "";
+
+            if (string.IsNullOrWhiteSpace(currentFilePath))
+            {
+                Title = $"Inspection Sketch{unsavedMarker}";
+                return;
+            }
+
+            string fileName =
+                System.IO.Path.GetFileName(currentFilePath);
+
+            Title =
+                $"Inspection Sketch — {fileName}{unsavedMarker}";
+        }
         public MainWindow()
         {
             InitializeComponent();
 
+
             DrawingCanvas.SelectedWallChanged += DrawingCanvas_SelectedWallChanged;
+            DrawingCanvas.UnsavedChangesChanged += DrawingCanvas_UnsavedChangesChanged;
             PreviewKeyDown += MainWindow_PreviewKeyDown;
         }
+        private void DrawingCanvas_UnsavedChangesChanged()
+        {
+            UpdateWindowTitle();
+        }
         private void SaveSketchButton_Click(
-    object sender,
-    RoutedEventArgs e)
+           object sender,
+            RoutedEventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(currentFilePath))
             {
@@ -94,6 +117,7 @@ namespace InspectionSketch
                     currentFilePath);
 
                 DrawingCanvas.MarkSaved();
+                UpdateWindowTitle();
 
                 return;
             }
@@ -144,22 +168,24 @@ namespace InspectionSketch
                     currentFilePath);
 
                 DrawingCanvas.MarkSaved();
+                UpdateWindowTitle();
             }
         }
         private void NewSketchButton_Click(
-    object sender,
-    RoutedEventArgs e)
+            object sender,
+            RoutedEventArgs e)
         {
             if (!ConfirmDiscardUnsavedChanges())
                 return;
 
             currentFilePath = null;
+            UpdateWindowTitle();
 
             DrawingCanvas.NewSketch();
         }
         private void OpenSketchButton_Click(
-    object sender,
-    RoutedEventArgs e)
+            object sender,
+             RoutedEventArgs e)
         {
             if (!ConfirmDiscardUnsavedChanges())
                 return;
@@ -180,6 +206,7 @@ namespace InspectionSketch
                 {
                     currentFilePath = openDialog.FileName;
                     DrawingCanvas.LoadSketch(loadedSketch);
+                    UpdateWindowTitle();
                 }
             }
         }
