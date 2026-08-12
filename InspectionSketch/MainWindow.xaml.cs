@@ -19,6 +19,7 @@ namespace InspectionSketch
         private Sketch currentSketch = new Sketch();
         private readonly SnapEngine snapEngine = new SnapEngine();
         private readonly SketchFileService sketchFileService = new();
+        private string? currentFilePath = null;
         private bool ConfirmDiscardUnsavedChanges()
         {
             if (!DrawingCanvas.HasUnsavedChanges)
@@ -36,24 +37,44 @@ namespace InspectionSketch
             if (result == MessageBoxResult.No)
                 return true;
 
-            SaveFileDialog saveDialog = new SaveFileDialog
+            if (result == MessageBoxResult.Yes)
             {
-                Title = "Save Inspection Sketch",
-                Filter = "Inspection Sketch (*.isketch)|*.isketch",
-                DefaultExt = ".isketch",
-                AddExtension = true
-            };
+                // If this sketch already has a file, save directly to it.
+                if (!string.IsNullOrWhiteSpace(currentFilePath))
+                {
+                    sketchFileService.Save(
+                        DrawingCanvas.CurrentSketch,
+                        currentFilePath);
 
-            if (saveDialog.ShowDialog() != true)
-                return false;
+                    DrawingCanvas.MarkSaved();
 
-            sketchFileService.Save(
-                DrawingCanvas.CurrentSketch,
-                saveDialog.FileName);
+                    return true;
+                }
 
-            DrawingCanvas.MarkSaved();
+                // This sketch has never been saved, so ask where to save it.
+                SaveFileDialog saveDialog = new SaveFileDialog
+                {
+                    Title = "Save Inspection Sketch",
+                    Filter = "Inspection Sketch (*.isketch)|*.isketch",
+                    DefaultExt = ".isketch",
+                    AddExtension = true
+                };
 
-            return true;
+                if (saveDialog.ShowDialog() != true)
+                    return false;
+
+                currentFilePath = saveDialog.FileName;
+
+                sketchFileService.Save(
+                    DrawingCanvas.CurrentSketch,
+                    currentFilePath);
+
+                DrawingCanvas.MarkSaved();
+
+                return true;
+            }
+
+            return false;
         }
         public MainWindow()
         {
@@ -63,9 +84,20 @@ namespace InspectionSketch
             PreviewKeyDown += MainWindow_PreviewKeyDown;
         }
         private void SaveSketchButton_Click(
-              object sender,
-              RoutedEventArgs e)
+    object sender,
+    RoutedEventArgs e)
         {
+            if (!string.IsNullOrWhiteSpace(currentFilePath))
+            {
+                sketchFileService.Save(
+                    DrawingCanvas.CurrentSketch,
+                    currentFilePath);
+
+                DrawingCanvas.MarkSaved();
+
+                return;
+            }
+
             SaveFileDialog saveDialog = new SaveFileDialog
             {
                 Title = "Save Inspection Sketch",
@@ -76,18 +108,23 @@ namespace InspectionSketch
 
             if (saveDialog.ShowDialog() == true)
             {
+                currentFilePath = saveDialog.FileName;
+
                 sketchFileService.Save(
                     DrawingCanvas.CurrentSketch,
-                    saveDialog.FileName);
+                    currentFilePath);
+
                 DrawingCanvas.MarkSaved();
             }
         }
         private void NewSketchButton_Click(
-            object sender,
-            RoutedEventArgs e)
+    object sender,
+    RoutedEventArgs e)
         {
             if (!ConfirmDiscardUnsavedChanges())
                 return;
+
+            currentFilePath = null;
 
             DrawingCanvas.NewSketch();
         }
@@ -112,6 +149,7 @@ namespace InspectionSketch
 
                 if (loadedSketch != null)
                 {
+                    currentFilePath = openDialog.FileName;
                     DrawingCanvas.LoadSketch(loadedSketch);
                 }
             }
