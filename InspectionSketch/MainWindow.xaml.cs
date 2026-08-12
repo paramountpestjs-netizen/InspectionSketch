@@ -19,6 +19,7 @@ namespace InspectionSketch
         private Sketch currentSketch = new Sketch();
         private readonly SnapEngine snapEngine = new SnapEngine();
         private readonly SketchFileService sketchFileService = new();
+        private readonly SketchMeasurementService measurementService = new();
         private string? currentFilePath = null;
         private bool ConfirmDiscardUnsavedChanges()
         {
@@ -76,6 +77,47 @@ namespace InspectionSketch
 
             return false;
         }
+        private void UpdateSketchMeasurements()
+        {
+            double perimeterFeet =
+                measurementService.CalculatePerimeterFeet(
+                    DrawingCanvas.CurrentSketch);
+
+            int wholeFeet = (int)System.Math.Floor(perimeterFeet);
+
+            int inches = (int)System.Math.Round(
+                (perimeterFeet - wholeFeet) * 12);
+
+            if (inches == 12)
+            {
+                wholeFeet++;
+                inches = 0;
+            }
+
+            PerimeterText.Text =
+                $"{wholeFeet}'-{inches}\"";
+           
+            bool isClosed =
+              measurementService.IsClosedOutline(
+                   DrawingCanvas.CurrentSketch);
+
+            OutlineStatusText.Text =
+                isClosed ? "Closed" : "Open";
+            
+            double areaSquareFeet =
+               measurementService.CalculateAreaSquareFeet(
+                   DrawingCanvas.CurrentSketch);
+
+            if (isClosed)
+            {
+                AreaText.Text =
+                    $"{areaSquareFeet:F1} sq ft";
+            }
+            else
+            {
+                AreaText.Text = "—";
+            }
+        }
         private void UpdateWindowTitle()
         {
             string unsavedMarker =
@@ -105,6 +147,7 @@ namespace InspectionSketch
         private void DrawingCanvas_UnsavedChangesChanged()
         {
             UpdateWindowTitle();
+            UpdateSketchMeasurements();
         }
         private void SaveSketchButton_Click(
            object sender,

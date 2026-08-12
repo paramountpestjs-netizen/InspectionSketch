@@ -112,6 +112,44 @@
             Margin="0,10,0,0"
             IsEnabled="False"
             Click="DeleteWallButton_Click" />
+               
+                <TextBlock Text="Sketch Measurements"
+           FontSize="18"
+           FontWeight="Bold"
+           Foreground="Black"
+           Margin="0,24,0,15" />
+
+                <TextBlock Text="Perimeter"
+           Foreground="Black"
+           FontWeight="SemiBold" />
+
+                <TextBlock x:Name="PerimeterText"
+           Text="0'-0&quot;"
+           Foreground="Black"
+           FontSize="16"
+           Margin="0,5,0,0" />
+                
+                <TextBlock Text="Outline"
+           Foreground="Black"
+           FontWeight="SemiBold"
+           Margin="0,15,0,0" />
+
+                <TextBlock x:Name="OutlineStatusText"
+           Text="Open"
+           Foreground="Black"
+           FontSize="16"
+           Margin="0,5,0,0" />
+
+                <TextBlock Text="Area"
+           Foreground="Black"
+           FontWeight="SemiBold"
+           Margin="0,15,0,0" />
+
+                <TextBlock x:Name="AreaText"
+           Text="0 sq ft"
+           Foreground="Black"
+           FontSize="16"
+           Margin="0,5,0,0" />
 
             </StackPanel>
         </Border>
