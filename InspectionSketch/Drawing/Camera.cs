@@ -6,7 +6,7 @@ namespace InspectionSketch.Drawing
     {
         public Point Offset { get; private set; } = new Point(0, 0);
 
-        public double Zoom { get; private set; } = 1.0;
+        public double Zoom { get; private set; } = 0.40;
 
         public void Pan(Vector delta)
         {
@@ -22,8 +22,8 @@ namespace InspectionSketch.Drawing
             if (newZoom > 8)
                 newZoom = 8;
 
-            if (newZoom < .25)
-                newZoom = .25;
+            if (newZoom < .10)
+                newZoom = .10;
 
             double zoomRatio = newZoom / oldZoom;
 
@@ -45,13 +45,13 @@ namespace InspectionSketch.Drawing
         {
             Zoom /= amount;
 
-            if (Zoom < .25)
-                Zoom = .25;
+            if (Zoom < .10)
+                Zoom = .10;
         }
         public void Reset()
         {
             Offset = new Point(0, 0);
-            Zoom = 1.0;
+            Zoom = 0.40;
         }
     }
 }

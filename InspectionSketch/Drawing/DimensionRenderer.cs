@@ -110,34 +110,7 @@ namespace InspectionSketch.Drawing
 
             Pen dimensionPen = new Pen(Brushes.Black, 1);
 
-            double extensionGap = 8;
-            double extensionPast = 10;
-
-            Point extensionStart1 = new Point(
-                start.X + normalX * extensionGap,
-                start.Y + normalY * extensionGap);
-
-            Point extensionEnd1 = new Point(
-                dimensionStart.X + normalX * extensionPast,
-                dimensionStart.Y + normalY * extensionPast);
-
-            Point extensionStart2 = new Point(
-                end.X + normalX * extensionGap,
-                end.Y + normalY * extensionGap);
-
-            Point extensionEnd2 = new Point(
-                dimensionEnd.X + normalX * extensionPast,
-                dimensionEnd.Y + normalY * extensionPast);
-
-            drawingContext.DrawLine(
-                dimensionPen,
-                extensionStart1,
-                extensionEnd1);
-
-            drawingContext.DrawLine(
-                dimensionPen,
-                extensionStart2,
-                extensionEnd2);
+            
 
             Point midpoint = new Point(
                 (dimensionStart.X + dimensionEnd.X) / 2,
