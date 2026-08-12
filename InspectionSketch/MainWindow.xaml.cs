@@ -73,6 +73,19 @@ namespace InspectionSketch
             EditWallLengthButton.IsEnabled = true;
             DeleteWallButton.IsEnabled = true;
         }
+        private void UndoButton_Click(
+                object sender,
+                RoutedEventArgs e)
+        {
+            DrawingCanvas.Undo();
+        }
+
+        private void RedoButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            DrawingCanvas.Redo();
+        }
         private void EditWallLengthButton_Click(
              object sender,
              RoutedEventArgs e)

@@ -26,6 +26,23 @@
             Padding="15">
 
             <StackPanel>
+                <StackPanel Orientation="Horizontal"
+            Margin="0,0,0,20">
+
+                    <Button x:Name="UndoButton"
+            Content="Undo"
+            Width="85"
+            Height="32"
+            Margin="0,0,8,0"
+            Click="UndoButton_Click" />
+
+                    <Button x:Name="RedoButton"
+            Content="Redo"
+            Width="85"
+            Height="32"
+            Click="RedoButton_Click" />
+
+                </StackPanel>
                 <TextBlock Text="Selected Wall"
                        FontSize="18"
                        FontWeight="Bold"
