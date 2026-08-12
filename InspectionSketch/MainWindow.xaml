@@ -26,53 +26,87 @@
             Padding="15">
 
             <StackPanel>
-                <StackPanel Orientation="Horizontal"
-            Margin="0,0,0,20">
+
+                <TextBlock Text="File"
+               FontSize="14"
+               FontWeight="SemiBold"
+               Foreground="Black"
+               Margin="0,0,0,8" />
+                
+                <Button x:Name="NewSketchButton"
+            Content="New Sketch"
+            Height="32"
+            Margin="0,0,0,8"
+            Click="NewSketchButton_Click" />
+                
+                <Button x:Name="SaveSketchButton"
+            Content="Save Sketch"
+            Height="32"
+            Margin="0,0,0,8"
+            Click="SaveSketchButton_Click" />
+
+                <Button x:Name="OpenSketchButton"
+            Content="Open Sketch"
+            Height="32"
+            Margin="0,0,0,18"
+            Click="OpenSketchButton_Click" />
+
+                <TextBlock Text="History"
+               FontSize="14"
+               FontWeight="SemiBold"
+               Foreground="Black"
+               Margin="0,0,0,8" />
+
+                <Grid Margin="0,0,0,22">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
                     <Button x:Name="UndoButton"
-            Content="Undo"
-            Width="85"
-            Height="32"
-            Margin="0,0,8,0"
-            Click="UndoButton_Click" />
+                Grid.Column="0"
+                Content="Undo"
+                Height="32"
+                Click="UndoButton_Click" />
 
                     <Button x:Name="RedoButton"
-            Content="Redo"
-            Width="85"
-            Height="32"
-            Click="RedoButton_Click" />
+                Grid.Column="2"
+                Content="Redo"
+                Height="32"
+                Click="RedoButton_Click" />
+                </Grid>
 
-                </StackPanel>
                 <TextBlock Text="Selected Wall"
-                       FontSize="18"
-                       FontWeight="Bold"
-                       Foreground="Black"
-                       Margin="0,0,0,15" />
+               FontSize="18"
+               FontWeight="Bold"
+               Foreground="Black"
+               Margin="0,0,0,15" />
 
                 <TextBlock Text="Length"
-                       Foreground="Black"
-                       FontWeight="SemiBold" />
+               Foreground="Black"
+               FontWeight="SemiBold" />
 
                 <TextBlock x:Name="SelectedWallLengthText"
-                       Text="No wall selected"
-                       Foreground="Black"
-                       FontSize="16"
-                       Margin="0,5,0,15" />
+               Text="No wall selected"
+               Foreground="Black"
+               FontSize="16"
+               Margin="0,5,0,15" />
 
                 <Button x:Name="EditWallLengthButton"
-                       Content="Edit Length"
-                       Height="32"
-                       IsEnabled="False"
-                       Click="EditWallLengthButton_Click" />
-                
-                <Button x:Name="DeleteWallButton"
-                       Content="Delete Wall"
-                       Height="32"
-                       Margin="0,10,0,0"
-                       IsEnabled="False"
-                       Click="DeleteWallButton_Click" />
-            </StackPanel>
+            Content="Edit Length"
+            Height="32"
+            IsEnabled="False"
+            Click="EditWallLengthButton_Click" />
 
+                <Button x:Name="DeleteWallButton"
+            Content="Delete Wall"
+            Height="32"
+            Margin="0,10,0,0"
+            IsEnabled="False"
+            Click="DeleteWallButton_Click" />
+
+            </StackPanel>
         </Border>
     </Grid>
 

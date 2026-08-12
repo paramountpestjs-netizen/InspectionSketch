@@ -1,4 +1,6 @@
-﻿using InspectionSketch.Drawing;
+﻿using InspectionSketch.Services;
+using Microsoft.Win32;
+using InspectionSketch.Drawing;
 using InspectionSketch.Models;
 using System.Collections.Generic;
 using System.Windows;
@@ -7,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
+
 namespace InspectionSketch
 {
     public partial class MainWindow : Window
@@ -14,12 +17,60 @@ namespace InspectionSketch
         private Point? lastPoint = null;
         private Sketch currentSketch = new Sketch();
         private readonly SnapEngine snapEngine = new SnapEngine();
+        private readonly SketchFileService sketchFileService = new();
         public MainWindow()
         {
             InitializeComponent();
 
             DrawingCanvas.SelectedWallChanged += DrawingCanvas_SelectedWallChanged;
             PreviewKeyDown += MainWindow_PreviewKeyDown;
+        }
+        private void SaveSketchButton_Click(
+              object sender,
+              RoutedEventArgs e)
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog
+            {
+                Title = "Save Inspection Sketch",
+                Filter = "Inspection Sketch (*.isketch)|*.isketch",
+                DefaultExt = ".isketch",
+                AddExtension = true
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                sketchFileService.Save(
+                    DrawingCanvas.CurrentSketch,
+                    saveDialog.FileName);
+            }
+        }
+        private void NewSketchButton_Click(
+          object sender,
+          RoutedEventArgs e)
+        {
+            DrawingCanvas.NewSketch();
+        }
+        private void OpenSketchButton_Click(
+          object sender,
+          RoutedEventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog
+            {
+                Title = "Open Inspection Sketch",
+                Filter = "Inspection Sketch (*.isketch)|*.isketch",
+                DefaultExt = ".isketch"
+            };
+
+            if (openDialog.ShowDialog() == true)
+            {
+                Sketch? loadedSketch =
+                    sketchFileService.Load(openDialog.FileName);
+
+                if (loadedSketch != null)
+                {
+                    DrawingCanvas.LoadSketch(loadedSketch);
+                }
+            }
         }
         private void MainWindow_PreviewKeyDown(
            object sender,

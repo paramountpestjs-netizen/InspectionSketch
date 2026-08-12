@@ -25,6 +25,45 @@ namespace InspectionSketch.Drawing
         private readonly Stack<(Action Undo, Action Redo)> redoStack = new();
 
         public event Action<Wall?>? SelectedWallChanged;
+        public Sketch CurrentSketch => sketch;
+        public void LoadSketch(Sketch loadedSketch)
+        {
+            sketch.Walls.Clear();
+
+            foreach (Wall wall in loadedSketch.Walls)
+            {
+                sketch.Walls.Add(wall);
+            }
+
+            sketch.Settings = loadedSketch.Settings;
+
+            selectedWall = null;
+
+            undoStack.Clear();
+            redoStack.Clear();
+
+            SelectedWallChanged?.Invoke(null);
+
+            InvalidateVisual();
+        }
+        public void NewSketch()
+        {
+            sketch.Walls.Clear();
+            sketch.Rooms.Clear();
+
+            selectedWall = null;
+            wallStartPoint = null;
+            wallPreviewPoint = null;
+
+            undoStack.Clear();
+            redoStack.Clear();
+
+            camera.Reset();
+
+            SelectedWallChanged?.Invoke(null);
+
+            InvalidateVisual();
+        }
         public SketchCanvas()
         {
             ClipToBounds = true;
