@@ -6,7 +6,8 @@
         Width="1200"
         Height="800"
         Background="#202020"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
 
     <Grid>
         <Grid.ColumnDefinitions>

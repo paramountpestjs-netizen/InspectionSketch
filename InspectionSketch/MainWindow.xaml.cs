@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.ComponentModel;
 
 
 namespace InspectionSketch
@@ -191,6 +192,15 @@ namespace InspectionSketch
             RoutedEventArgs e)
         {
             DrawingCanvas.DeleteSelectedWall();
+        }
+        private void Window_Closing(
+            object? sender,
+            CancelEventArgs e)
+        {
+            if (!ConfirmDiscardUnsavedChanges())
+            {
+                e.Cancel = true;
+            }
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
