@@ -390,11 +390,15 @@ namespace InspectionSketch.Drawing
 {
     if (selectedWall == null)
         return;
+           
+            Wall wallBeingEdited = selectedWall;
 
-    double currentFeet =
-        selectedWall.Length / sketch.Settings.PixelsPerFoot;
+            var beforeStates = CaptureWallStates();
 
-    int wholeFeet = (int)Math.Floor(currentFeet);
+            double currentFeet =
+               wallBeingEdited.Length / sketch.Settings.PixelsPerFoot;
+
+            int wholeFeet = (int)Math.Floor(currentFeet);
 
     int inches = (int)Math.Round(
         (currentFeet - wholeFeet) * 12);
@@ -437,13 +441,29 @@ namespace InspectionSketch.Drawing
 
             if (newLengthInFeet > 0)
             {
-                SetWallLength(
-                    selectedWall,
-                    newLengthInFeet);
+                        SetWallLength(
+                           wallBeingEdited,
+                           newLengthInFeet);
+                        var afterStates = CaptureWallStates();
+
+                        undoStack.Push((
+                            Undo: () =>
+                            {
+                                RestoreWallStates(beforeStates);
+                                SelectedWallChanged?.Invoke(wallBeingEdited);
+                            },
+                            Redo: () =>
+                            {
+                                RestoreWallStates(afterStates);
+                                SelectedWallChanged?.Invoke(wallBeingEdited);
+                            }
+                        ));
+
+                        redoStack.Clear();
 
 
-                SelectedWallChanged?.Invoke(selectedWall);
-            }
+                        SelectedWallChanged?.Invoke(wallBeingEdited);
+                    }
         }
     }
 }
