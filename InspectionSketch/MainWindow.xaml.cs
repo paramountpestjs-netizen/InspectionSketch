@@ -147,7 +147,11 @@ namespace InspectionSketch
 
             PropertyAddressTextBox.TextChanged += ReportInfoTextBox_TextChanged;
             InspectorNameTextBox.TextChanged += ReportInfoTextBox_TextChanged;
+            CustomerNameTextBox.TextChanged += ReportInfoTextBox_TextChanged;
+            InspectionDatePicker.SelectedDateChanged += InspectionDatePicker_SelectedDateChanged;
+            NotesTextBox.TextChanged += ReportInfoTextBox_TextChanged;
         }
+
         private void ReportInfoTextBox_TextChanged(
     object sender,
     TextChangedEventArgs e)
@@ -155,11 +159,31 @@ namespace InspectionSketch
             if (isLoadingReportInfo)
                 return;
 
+            DrawingCanvas.CurrentSketch.ReportInfo.CustomerName =
+                CustomerNameTextBox.Text;
+            
             DrawingCanvas.CurrentSketch.ReportInfo.PropertyAddress =
                 PropertyAddressTextBox.Text;
 
             DrawingCanvas.CurrentSketch.ReportInfo.InspectorName =
                 InspectorNameTextBox.Text;
+
+            DrawingCanvas.CurrentSketch.ReportInfo.Notes =
+               NotesTextBox.Text;
+
+        }
+        private void InspectionDatePicker_SelectedDateChanged(
+          object? sender,
+          SelectionChangedEventArgs e)
+        {
+            if (isLoadingReportInfo)
+                return;
+
+            if (InspectionDatePicker.SelectedDate.HasValue)
+            {
+                DrawingCanvas.CurrentSketch.ReportInfo.InspectionDate =
+                    InspectionDatePicker.SelectedDate.Value;
+            }
         }
         private void DrawingCanvas_UnsavedChangesChanged()
         {
@@ -232,8 +256,8 @@ namespace InspectionSketch
             }
         }
         private void NewSketchButton_Click(
-           object sender,
-           RoutedEventArgs e)
+    object sender,
+    RoutedEventArgs e)
         {
             if (!ConfirmDiscardUnsavedChanges())
                 return;
@@ -244,8 +268,17 @@ namespace InspectionSketch
 
             DrawingCanvas.NewSketch();
 
+            isLoadingReportInfo = true;
+
+            InspectionDatePicker.SelectedDate =
+                DrawingCanvas.CurrentSketch.ReportInfo.InspectionDate;
+
+            CustomerNameTextBox.Text = "";
             PropertyAddressTextBox.Text = "";
             InspectorNameTextBox.Text = "";
+            NotesTextBox.Text = "";
+
+            isLoadingReportInfo = false;
         }
         private void OpenSketchButton_Click(
             object sender,
@@ -274,12 +307,21 @@ namespace InspectionSketch
 
                     isLoadingReportInfo = true;
 
+                    InspectionDatePicker.SelectedDate =
+                        DrawingCanvas.CurrentSketch.ReportInfo.InspectionDate;
+
+                    CustomerNameTextBox.Text =
+                        DrawingCanvas.CurrentSketch.ReportInfo.CustomerName;
+
                     PropertyAddressTextBox.Text =
                         DrawingCanvas.CurrentSketch.ReportInfo.PropertyAddress;
 
                     InspectorNameTextBox.Text =
                         DrawingCanvas.CurrentSketch.ReportInfo.InspectorName;
 
+                    NotesTextBox.Text =
+                        DrawingCanvas.CurrentSketch.ReportInfo.Notes;
+                   
                     isLoadingReportInfo = false;
 
                     UpdateWindowTitle();
