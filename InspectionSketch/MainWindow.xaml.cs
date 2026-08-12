@@ -18,6 +18,42 @@ namespace InspectionSketch
         private Sketch currentSketch = new Sketch();
         private readonly SnapEngine snapEngine = new SnapEngine();
         private readonly SketchFileService sketchFileService = new();
+        private bool ConfirmDiscardUnsavedChanges()
+        {
+            if (!DrawingCanvas.HasUnsavedChanges)
+                return true;
+
+            MessageBoxResult result = MessageBox.Show(
+                "You have unsaved changes. Would you like to save before continuing?",
+                "Unsaved Changes",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Cancel)
+                return false;
+
+            if (result == MessageBoxResult.No)
+                return true;
+
+            SaveFileDialog saveDialog = new SaveFileDialog
+            {
+                Title = "Save Inspection Sketch",
+                Filter = "Inspection Sketch (*.isketch)|*.isketch",
+                DefaultExt = ".isketch",
+                AddExtension = true
+            };
+
+            if (saveDialog.ShowDialog() != true)
+                return false;
+
+            sketchFileService.Save(
+                DrawingCanvas.CurrentSketch,
+                saveDialog.FileName);
+
+            DrawingCanvas.MarkSaved();
+
+            return true;
+        }
         public MainWindow()
         {
             InitializeComponent();
@@ -42,18 +78,25 @@ namespace InspectionSketch
                 sketchFileService.Save(
                     DrawingCanvas.CurrentSketch,
                     saveDialog.FileName);
+                DrawingCanvas.MarkSaved();
             }
         }
         private void NewSketchButton_Click(
-          object sender,
-          RoutedEventArgs e)
+            object sender,
+            RoutedEventArgs e)
         {
+            if (!ConfirmDiscardUnsavedChanges())
+                return;
+
             DrawingCanvas.NewSketch();
         }
         private void OpenSketchButton_Click(
-          object sender,
-          RoutedEventArgs e)
+    object sender,
+    RoutedEventArgs e)
         {
+            if (!ConfirmDiscardUnsavedChanges())
+                return;
+
             OpenFileDialog openDialog = new OpenFileDialog
             {
                 Title = "Open Inspection Sketch",

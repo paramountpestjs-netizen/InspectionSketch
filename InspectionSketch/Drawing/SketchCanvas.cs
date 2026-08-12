@@ -13,7 +13,7 @@ namespace InspectionSketch.Drawing
         private readonly DrawingRenderer drawingRenderer = new();
         private readonly SketchRenderer sketchRenderer = new();
         private readonly PreviewRenderer previewRenderer = new();
-
+        private bool hasUnsavedChanges = false;
         private bool isPanning = false;
         private Point lastPanPoint;
         private Point? wallStartPoint = null;
@@ -26,6 +26,11 @@ namespace InspectionSketch.Drawing
 
         public event Action<Wall?>? SelectedWallChanged;
         public Sketch CurrentSketch => sketch;
+        public bool HasUnsavedChanges => hasUnsavedChanges;
+        public void MarkSaved()
+        {
+            hasUnsavedChanges = false;
+        }
         public void LoadSketch(Sketch loadedSketch)
         {
             sketch.Walls.Clear();
@@ -43,7 +48,7 @@ namespace InspectionSketch.Drawing
             redoStack.Clear();
 
             SelectedWallChanged?.Invoke(null);
-
+            hasUnsavedChanges = false;
             InvalidateVisual();
         }
         public void NewSketch()
@@ -61,7 +66,7 @@ namespace InspectionSketch.Drawing
             camera.Reset();
 
             SelectedWallChanged?.Invoke(null);
-
+            hasUnsavedChanges = false;
             InvalidateVisual();
         }
         public SketchCanvas()
@@ -163,6 +168,8 @@ namespace InspectionSketch.Drawing
                     };
 
                     sketch.Walls.Add(newWall);
+                    
+                    hasUnsavedChanges = true;
 
                     undoStack.Push((
                         Undo: () =>
@@ -395,6 +402,8 @@ namespace InspectionSketch.Drawing
             int wallIndex = sketch.Walls.IndexOf(wallToDelete);
 
             sketch.Walls.Remove(wallToDelete);
+           
+            hasUnsavedChanges = true;
 
             undoStack.Push((
                 Undo: () =>
@@ -483,6 +492,7 @@ namespace InspectionSketch.Drawing
                         SetWallLength(
                            wallBeingEdited,
                            newLengthInFeet);
+                           hasUnsavedChanges = true;
                         var afterStates = CaptureWallStates();
 
                         undoStack.Push((
